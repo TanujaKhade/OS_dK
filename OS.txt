@@ -1,0 +1,3951 @@
+SLIP 1
+
+Q1. Write a C program to simulate Banker's algorithm for the purpose of deadlock avoidance.
+Consider the following snapshot of system, A, B, C and D is the resource type.
+
+#include<stdio.h>
+
+int n,m;
+int alloc[10][10],max[10][10],need[10][10];
+int available[10],total[10],work[10],finish[10],seq[10],req[10];
+int pno;
+void accept()
+{
+	int i,j;
+	printf("Enter no of process:");
+	scanf("%d",&n);
+	printf("Enter the no of resource type:");
+	scanf("%d",&m);
+	printf("Enter total instances of each resource type\n");
+	for(j=0;j<m;j++)
+	{
+		printf("%c:",65+j);
+		scanf("%d",&total[j]);
+	}
+	printf("Enter the allocation\n");
+	for(i=0;i<n;i++)
+	{
+		printf("p%d:\n",i);
+		for(j=0;j<m;j++)
+		{
+			printf("%c:",65+j);
+			scanf("%d",&alloc[i][j]);
+		}
+	}
+	printf("Enter max need:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("p%d:\n",i);
+		for(j=0;j<m;j++)
+		{
+			printf("%c:",65+j);
+			scanf("%d",&max[i][j]);
+		}
+	}
+}
+void calc_avail()
+{
+	int i,j,s;
+	for(j=0;j<m;j++)
+	{
+		s=0;
+		for(i=0;i<n;i++)
+			s=s+alloc[i][j];
+
+		available[j]=total[j]-s;
+	}
+}
+void calc_need()
+{
+	int i,j;
+	for(i=0;i<n;i++)
+	{
+		for(j=0;j<m;j++)
+		{
+			need[i][j]=max[i][j]-alloc[i][j];
+		}
+	}
+}
+void print()
+{
+	int i,j;
+	printf("\n\tAllocation\t\tMax\t\tNeed\n\t");
+	for(i=0;i<m;i++)
+	{
+		printf("%3c",65+i);
+	}
+	printf("\t");
+	for(i=0;i<m;i++)
+	{
+		printf("%3c",65+i);
+	}
+	printf("\t");
+	for(i=0;i<m;i++)
+	{
+		printf("%3c",65+i);
+	}
+	for(i=0;i<n;i++)
+	{
+		printf("\np%d\t",i);
+		for(j=0;j<m;j++)
+			printf("%3d",alloc[i][j]);
+		printf("\t");
+		for(j=0;j<m;j++)
+			printf("%3d",max[i][j]);
+		printf("\t");
+		for(j=0;j<m;j++)
+			printf("%3d",need[i][j]);
+	}
+	printf("\n\nAvailable\n");
+	for(j=0;j<m;j++)
+	{
+		printf("%3c\t",65+j);
+	}
+	printf("\n");
+	for(j=0;j<m;j++)
+	{
+		printf("%3d\t",available[j]);
+	}
+	printf("\n");
+}
+int find()
+{
+	int i,j;
+
+	for(i=0;i<n;i++)
+	{
+		if(!finish[i])
+		{
+			for(j=0;j<m;j++)
+			{
+				if(need[i][j]>work[j])
+					break;
+			}
+
+			if(j==m)
+				return i;
+		}
+	}
+
+	return -1;
+}
+void bankers()
+{
+	int i,j,k=0;
+	for(i=0;i<n;i++)
+		finish[i]=0;
+	for(j=0;j<m;j++)
+		work[j]=available[j];
+	while((i=find())!=-1)
+	{
+		printf("\nNeed%d(",i);
+		for(j=0;j<m;j++)
+			printf("%d,",need[i][j]);
+		printf("\b)<=work(");
+		for(j=0;j<m;j++)
+			printf("%d,",work[j]);
+		printf("\b)");
+		finish[i]=1;
+		for(j=0;j<m;j++)
+			work[j]=work[j]+alloc[i][j];
+		printf("\nwork(");
+		for(j=0;j<m;j++)
+			printf("%d,",work[j]);
+		printf("\b)\nFinish(");
+		for(j=0;j<n;j++)
+			printf("%d,",finish[j]);
+		printf("\b)");
+		seq[k++]=i;
+	}
+	if(k==n)
+	{
+		printf("\n\nSystem is in safe state:\n");
+		printf("Safe sequence: ");
+		for(j=0;j<n;j++)
+			printf("p%d-",seq[j]);
+	}
+	else
+	{
+		printf("\n\nSystem is in unsafe state");
+	}
+}
+int main()
+{
+	int i,j;
+	system("clear");
+	accept();
+	calc_avail();
+	calc_need();
+	print();
+	bankers();
+	printf("\n\nEnter process no:");
+	scanf("%d",&pno);
+	printf("Enter request of process p%d\n",pno);
+	for(j=0;j<m;j++)
+	{
+		printf("%c:",65+j);
+		scanf("%d",&req[j]);
+	}
+	for(j=0;j<m;j++)
+	{
+		if(req[j]>need[pno][j])
+			break;
+	}
+	if(j==m)
+	{
+		for(j=0;j<m;j++)
+		{
+			if(req[j]>available[j])
+				break;
+		}
+		if(j==m)
+		{
+			for(j=0;j<m;j++)
+			{
+				available[j]=available[j]-req[j];
+				alloc[pno][j]=alloc[pno][j]+req[j];
+				need[pno][j]=need[pno][j]-req[j];
+			}
+			print();
+
+			bankers();
+		}
+		else
+		{
+			printf("\nProcess p%d has to wait",pno);
+		}
+	}
+	else
+	{
+		printf("\nRequest of process p%d cannot be generated",pno);
+	}
+	return 0;
+}
+
+
+Q2. Write a simulation program for disk scheduling using SSTF algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 98, 183, 37, 122, 14, 124, 65
+Start Head Position: 53
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+    int blocks, n, i, j, head;
+    int request[100], visited[100] = {0};
+    int seek = 0, min, pos, diff;
+    printf("Enter total number of disk blocks: ");
+    scanf("%d", &blocks);
+    printf("Enter number of disk requests: ");
+    scanf("%d", &n);
+    printf("Enter disk request string:\n");
+    for(i = 0; i < n; i++)
+    {
+        scanf("%d", &request[i]);
+    }
+    printf("Enter current head position: ");
+    scanf("%d", &head);
+    printf("\nRequests served in order:\n");
+    printf("%d", head);
+    for(i = 0; i < n; i++)
+    {
+        min = 99999;
+        pos = -1;
+        for(j = 0; j < n; j++)
+        {
+            if(visited[j] == 0)
+            {
+                diff = abs(head - request[j]);
+                if(diff < min)
+                {
+                    min = diff;
+                    pos = j;
+                }
+            }
+        }
+        visited[pos] = 1;
+        seek = seek + min;
+        head = request[pos];
+        printf(" -> %d", head);
+    }
+    printf("\n\nTotal number of head movements = %d\n", seek);
+    return 0;
+}
+
+_______________________________________________________________________________________________________
+
+SLIP 2
+
+Q1. Implement the Menu driven Banker's algorithm for accepting Allocation, Max from user
+a) Accept Available
+b) Display Allocation, Max
+c) Find Need and display it
+d) Display Available
+Consider the system with 3 resource types A, B, and C with 7, 2, 6 instances respectively.
+
+
+#include<stdio.h>
+
+int n,m=3;
+int alloc[10][3],max[10][3],need[10][3];
+int available[3];
+void accept()
+{
+    int i,j;
+    printf("Enter number of processes: ");
+    scanf("%d",&n);
+    printf("\nEnter Allocation Matrix:\n");
+    for(i=0;i<n;i++)
+    {
+        printf("P%d:\n",i);
+        for(j=0;j<m;j++)
+        {
+            printf("%c: ",65+j);
+            scanf("%d",&alloc[i][j]);
+        }
+    }
+    printf("\nEnter Max Matrix:\n");
+    for(i=0;i<n;i++)
+    {
+        printf("P%d:\n",i);
+        for(j=0;j<m;j++)
+        {
+            printf("%c: ",65+j);
+            scanf("%d",&max[i][j]);
+        }
+    }
+}
+void accept_available()
+{
+    int j;
+    printf("\nEnter Available Resources:\n");
+    for(j=0;j<m;j++)
+    {
+        printf("%c: ",65+j);
+        scanf("%d",&available[j]);
+    }
+}
+void display()
+{
+    int i,j;
+    printf("\n\tAllocation\tMax\n");
+    for(i=0;i<n;i++)
+    {
+        printf("P%d\t",i);
+        for(j=0;j<m;j++)
+            printf("%3d",alloc[i][j]);
+        printf("\t");
+        for(j=0;j<m;j++)
+            printf("%3d",max[i][j]);
+        printf("\n");
+    }
+}
+void calc_need()
+{
+    int i,j;
+    for(i=0;i<n;i++)
+    {
+        for(j=0;j<m;j++)
+        {
+            need[i][j]=max[i][j]-alloc[i][j];
+        }
+    }
+    printf("\nNeed Matrix:\n");
+    for(i=0;i<n;i++)
+    {
+        printf("P%d\t",i);
+        for(j=0;j<m;j++)
+            printf("%3d",need[i][j]);
+        printf("\n");
+    }
+}
+void display_available()
+{
+    int j;
+    printf("\nAvailable Resources:\n");
+    for(j=0;j<m;j++)
+    {
+        printf("%c\t",65+j);
+    }
+    printf("\n");
+    for(j=0;j<m;j++)
+    {
+        printf("%d\t",available[j]);
+    }
+    printf("\n");
+}
+int main()
+{
+    int choice;
+    do
+    {
+        printf("\n\n----- BANKER'S ALGORITHM -----");
+        printf("\n1. Accept Allocation and Max");
+        printf("\n2. Accept Available");
+        printf("\n3. Display Allocation and Max");
+        printf("\n4. Find Need and Display");
+        printf("\n5. Display Available");
+        printf("\n6. Exit");
+        printf("\nEnter your choice: ");
+        scanf("%d",&choice);
+        switch(choice)
+        {
+            case 1:
+                accept();
+                break;
+            case 2:
+                accept_available();
+                break;
+            case 3:
+                display();
+                break;
+            case 4:
+                calc_need();
+                break;
+            case 5:
+                display_available();
+                break;
+            case 6:
+                printf("\nProgram terminated.\n");
+                break;
+            default:
+                printf("\nInvalid choice.");
+        }
+    }
+    while(choice!=6);
+    return 0;
+}
+
+
+Q2. Write a simulation program for disk scheduling using SCAN algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 82, 170, 43, 140, 24, 16, 190, 65
+Starting Head Position = 50
+Direction: Left
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+    int blocks,n,i,j,head;
+    int request[100],visited[100]={0};
+    int left[100],right[100];
+    int l=0,r=0;
+    int seek=0,temp;
+    char direction;
+    printf("Enter total number of disk blocks: ");
+    scanf("%d",&blocks);
+    printf("Enter number of disk requests: ");
+    scanf("%d",&n);
+    printf("Enter disk request string:\n");
+    for(i=0;i<n;i++)
+        scanf("%d",&request[i]);
+    printf("Enter starting head position: ");
+    scanf("%d",&head);
+    printf("Enter direction (L/R): ");
+    scanf(" %c",&direction);
+    for(i=0;i<n;i++)
+    {
+        if(request[i]<head)
+            left[l++]=request[i];
+        else
+            right[r++]=request[i];
+    }
+    for(i=0;i<l-1;i++)
+    {
+        for(j=i+1;j<l;j++)
+        {
+            if(left[i]<left[j])
+            {
+                temp=left[i];
+                left[i]=left[j];
+                left[j]=temp;
+            }
+        }
+    }
+    for(i=0;i<r-1;i++)
+    {
+        for(j=i+1;j<r;j++)
+        {
+            if(right[i]>right[j])
+            {
+                temp=right[i];
+                right[i]=right[j];
+                right[j]=temp;
+            }
+        }
+    }
+    printf("\nRequests served in order:\n");
+    printf("%d",head);
+    if(direction=='L' || direction=='l')
+    {
+        for(i=0;i<l;i++)
+        {
+            seek=seek+abs(head-left[i]);
+            head=left[i];
+            printf(" -> %d",head);
+        }
+        if(head!=0)
+        {
+            seek=seek+head;
+            head=0;
+            printf(" -> %d",head);
+        }
+        for(i=0;i<r;i++)
+        {
+            seek=seek+abs(head-right[i]);
+            head=right[i];
+            printf(" -> %d",head);
+        }
+    }
+    else
+    {
+        for(i=0;i<r;i++)
+        {
+            seek=seek+abs(head-right[i]);
+            head=right[i];
+            printf(" -> %d",head);
+        }
+        if(head!=blocks-1)
+        {
+            seek=seek+abs(head-(blocks-1));
+            head=blocks-1;
+            printf(" -> %d",head);
+        }
+        for(i=0;i<l;i++)
+        {
+            seek=seek+abs(head-left[i]);
+            head=left[i];
+            printf(" -> %d",head);
+        }
+    }
+    printf("\n\nTotal number of head movements = %d\n",seek);
+    return 0;
+}
+
+__________________________________________________________________________________
+SLIP 3
+
+Q1.  Write the simulation program for demand paging and show the page scheduling and total
+number of page faults according to the FIFO page replacement algorithm. Assume the
+memory of n frames.
+Reference String: 3, 4, 5, 6, 3, 4, 7, 3, 4, 5, 6, 7, 2, 4, 6
+
+#include<stdio.h>
+
+int main()
+{
+    int n, i, j, k;
+    int ref[100], frame[20];
+    int pageFaults = 0;
+    int pointer = 0;
+    int found;
+    printf("Enter number of frames: ");
+    scanf("%d",&n);
+    printf("Enter number of pages in reference string: ");
+    scanf("%d",&k);
+    printf("Enter reference string:\n");
+    for(i=0;i<k;i++)
+        scanf("%d",&ref[i]);
+    for(i=0;i<n;i++)
+        frame[i]=-1;
+    printf("\nPage\t");
+    for(i=0;i<n;i++)
+        printf("F%d\t",i+1);
+    printf("Status\n");
+    for(i=0;i<k;i++)
+    {
+        found=0;
+        for(j=0;j<n;j++)
+        {
+            if(frame[j]==ref[i])
+            {
+                found=1;
+                break;
+            }
+        }
+        if(found==0)
+        {
+            frame[pointer]=ref[i];
+            pointer=(pointer+1)%n;
+            pageFaults++;
+        }
+        printf("%d\t",ref[i]);
+        for(j=0;j<n;j++)
+        {
+            if(frame[j]==-1)
+                printf("-\t");
+            else
+                printf("%d\t",frame[j]);
+        }
+        if(found==0)
+            printf("Page Fault");
+        else
+            printf("Hit");
+        printf("\n");
+    }
+    printf("\nTotal number of page faults = %d\n",pageFaults);
+    return 0;
+}
+
+
+Q2.  Consider a system with 'n' processes and 'm' resource types. Accept number of instances for
+every resource type. For each process accept the allocation and maximum requirement
+matrices. Write a program to display the contents of need matrix and to check if the given
+request of a process can be granted immediately or not. (Use resource request algorithm).
+
+
+#include<stdio.h>
+
+int n,m;
+int alloc[10][10],max[10][10],need[10][10];
+int total[10],available[10],request[10];
+
+void accept()
+{
+    int i,j,sum;
+    printf("Enter number of processes: ");
+    scanf("%d",&n);
+    printf("Enter number of resource types: ");
+    scanf("%d",&m);
+    printf("Enter total instances of each resource:\n");
+    for(j=0;j<m;j++)
+    {
+        printf("%c: ",65+j);
+        scanf("%d",&total[j]);
+    }
+    printf("\nEnter Allocation Matrix:\n");
+    for(i=0;i<n;i++)
+    {
+        printf("P%d:\n",i);
+        for(j=0;j<m;j++)
+        {
+            printf("%c: ",65+j);
+            scanf("%d",&alloc[i][j]);
+        }
+    }
+    printf("\nEnter Maximum Matrix:\n");
+    for(i=0;i<n;i++)
+    {
+        printf("P%d:\n",i);
+        for(j=0;j<m;j++)
+        {
+            printf("%c: ",65+j);
+            scanf("%d",&max[i][j]);
+        }
+    }
+    for(j=0;j<m;j++)
+    {
+        sum=0;
+        for(i=0;i<n;i++)
+            sum=sum+alloc[i][j];
+        available[j]=total[j]-sum;
+    }
+}
+void calc_need()
+{
+    int i,j;
+    for(i=0;i<n;i++)
+    {
+        for(j=0;j<m;j++)
+        {
+            need[i][j]=max[i][j]-alloc[i][j];
+        }
+    }
+}
+void display_need()
+{
+    int i,j;
+    printf("\nNeed Matrix:\n");
+    for(i=0;i<n;i++)
+    {
+        printf("P%d\t",i);
+        for(j=0;j<m;j++)
+        {
+            printf("%3d",need[i][j]);
+        }
+        printf("\n");
+    }
+}
+void display_available()
+{
+    int j;
+    printf("\nAvailable Resources:\n");
+    for(j=0;j<m;j++)
+    {
+        printf("%c\t",65+j);
+    }
+    printf("\n");
+    for(j=0;j<m;j++)
+    {
+        printf("%d\t",available[j]);
+    }
+    printf("\n");
+}
+void request_resource()
+{
+    int p,i;
+    printf("\nEnter process number: ");
+    scanf("%d",&p);
+    printf("Enter request for process P%d:\n",p);
+    for(i=0;i<m;i++)
+    {
+        printf("%c: ",65+i);
+        scanf("%d",&request[i]);
+    }
+    for(i=0;i<m;i++)
+    {
+        if(request[i]>need[p][i])
+        {
+            printf("\nRequest cannot be granted.");
+            printf("\nRequest is greater than Need.\n");
+            return;
+        }
+    }
+    for(i=0;i<m;i++)
+    {
+        if(request[i]>available[i])
+        {
+            printf("\nRequest cannot be granted immediately.");
+            printf("\nProcess P%d has to wait.\n",p);
+            return;
+        }
+    }
+    for(i=0;i<m;i++)
+    {
+        available[i]=available[i]-request[i];
+        alloc[p][i]=alloc[p][i]+request[i];
+        need[p][i]=need[p][i]-request[i];
+    }
+    printf("\nRequest can be granted immediately.");
+    printf("\nResources are allocated to process P%d.\n",p);
+    printf("\nUpdated Need Matrix:\n");
+    for(i=0;i<n;i++)
+    {
+        int j;
+        printf("P%d\t",i);
+        for(j=0;j<m;j++)
+        {
+            printf("%3d",need[i][j]);
+        }
+        printf("\n");
+    }
+    display_available();
+}
+int main()
+{
+    accept();
+    calc_need();
+    display_need();
+    display_available();
+    request_resource();
+    return 0;
+}
+
+__________________________________________________________________________
+SLIP 4
+
+Q1. Consider the following snapshot of the system.Using Resource-Request algorithm check whether the current system is in safe state or not.
+
+
+#include<stdio.h>
+
+int n,m;
+int alloc[10][10],max[10][10],need[10][10];
+int available[10],total[10],work[10],finish[10],seq[10],req[10];
+int pno;
+void accept()
+{
+	int i,j;
+	printf("Enter no of process:");
+	scanf("%d",&n);
+	printf("Enter the no of resource type:");
+	scanf("%d",&m);
+	printf("Enter total instances of each resource type\n");
+	for(j=0;j<m;j++)
+	{
+		printf("%c:",65+j);
+		scanf("%d",&total[j]);
+	}
+	printf("Enter the allocation\n");
+	for(i=0;i<n;i++)
+	{
+		printf("p%d:\n",i);
+		for(j=0;j<m;j++)
+		{
+			printf("%c:",65+j);
+			scanf("%d",&alloc[i][j]);
+		}
+	}
+	printf("Enter max need:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("p%d:\n",i);
+		for(j=0;j<m;j++)
+		{
+			printf("%c:",65+j);
+			scanf("%d",&max[i][j]);
+		}
+	}
+}
+void calc_avail()
+{
+	int i,j,s;
+	for(j=0;j<m;j++)
+	{
+		s=0;
+		for(i=0;i<n;i++)
+			s=s+alloc[i][j];
+		available[j]=total[j]-s;
+	}
+}
+void calc_need()
+{
+	int i,j;
+	for(i=0;i<n;i++)
+	{
+		for(j=0;j<m;j++)
+		{
+			need[i][j]=max[i][j]-alloc[i][j];
+		}
+	}
+}
+void print()
+{
+	int i,j;
+	printf("\n\tAllocation\t\tMax\t\tNeed\n\t");
+	for(i=0;i<m;i++)
+		printf("%3c",65+i);
+	printf("\t");
+	for(i=0;i<m;i++)
+		printf("%3c",65+i);
+	printf("\t");
+	for(i=0;i<m;i++)
+		printf("%3c",65+i);
+	for(i=0;i<n;i++)
+	{
+		printf("\np%d\t",i);
+		for(j=0;j<m;j++)
+			printf("%3d",alloc[i][j]);
+		printf("\t");
+		for(j=0;j<m;j++)
+			printf("%3d",max[i][j]);
+		printf("\t");
+		for(j=0;j<m;j++)
+			printf("%3d",need[i][j]);
+	}
+	printf("\n\nAvailable\n");
+	for(j=0;j<m;j++)
+		printf("%3c\t",65+j);
+	printf("\n");
+	for(j=0;j<m;j++)
+		printf("%3d\t",available[j]);
+	printf("\n");
+}
+int find()
+{
+	int i,j;
+	for(i=0;i<n;i++)
+	{
+		if(!finish[i])
+		{
+			for(j=0;j<m;j++)
+			{
+				if(need[i][j]>work[j])
+					break;
+			}
+			if(j==m)
+				return i;
+		}
+	}
+	return -1;
+}
+int bankers()
+{
+	int i,j,k=0;
+	for(i=0;i<n;i++)
+		finish[i]=0;
+	for(j=0;j<m;j++)
+		work[j]=available[j];
+	while((i=find())!=-1)
+	{
+		finish[i]=1;
+		for(j=0;j<m;j++)
+			work[j]=work[j]+alloc[i][j];
+		seq[k++]=i;
+	}
+	if(k==n)
+	{
+		printf("\nSystem is in safe state\n");
+		printf("Safe sequence: ");
+		for(j=0;j<n;j++)
+			printf("p%d-",seq[j]);
+		printf("\n");
+		return 1;
+	}
+	else
+	{
+		printf("\nSystem is in unsafe state\n");
+		return 0;
+	}
+}
+int main()
+{
+	int i,j;
+	system("clear");
+	accept();
+	calc_avail();
+	calc_need();
+	print();
+	bankers();
+	printf("\nEnter process no:");
+	scanf("%d",&pno);
+	printf("Enter request of process p%d\n",pno);
+	for(j=0;j<m;j++)
+	{
+		printf("%c:",65+j);
+		scanf("%d",&req[j]);
+	}
+	for(j=0;j<m;j++)
+	{
+		if(req[j]>need[pno][j])
+			break;
+	}
+	if(j==m)
+	{
+		for(j=0;j<m;j++)
+		{
+			if(req[j]>available[j])
+				break;
+		}
+		if(j==m)
+		{
+			for(j=0;j<m;j++)
+			{
+				available[j]=available[j]-req[j];
+				alloc[pno][j]=alloc[pno][j]+req[j];
+				need[pno][j]=need[pno][j]-req[j];
+			}
+			printf("\nAfter granting request:\n");
+			print();
+			bankers();
+		}
+		else
+		{
+			printf("\nProcess p%d has to wait",pno);
+		}
+	}
+	else
+	{
+		printf("\nRequest of process p%d cannot be generated",pno);
+	}
+	return 0;
+}
+
+
+
+
+
+Q2.  Write a program that demonstrates the use of nice() system call. After a child process is
+started using fork(), assign higher priority to the child using nice() system call.
+
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
+#include<errno.h>
+
+int main()
+{
+    pid_t pid;
+    int status;
+    printf("Parent Process ID: %d\n",getpid());
+    printf("Parent Nice Value: %d\n",nice(0));
+    pid=fork();
+    if(pid<0)
+    {
+        printf("Fork failed\n");
+        return 1;
+    }
+    if(pid==0)
+    {
+        printf("\nChild Process ID: %d\n",getpid());
+        printf("Child Nice Value Before: %d\n",nice(0));
+        errno=0;
+        if(nice(-5)==-1 && errno!=0)
+        {
+            perror("nice");
+            exit(1);
+        }
+        printf("Child Nice Value After: %d\n",nice(0));
+        printf("Child process is running...\n");
+    }
+    else
+    {
+        wait(&status);
+        printf("\nParent process is completed.\n");
+    }
+    return 0;
+}
+
+
+___________________________________________________________________________________________________
+SLIP 5
+
+
+
+Q1.Write the simulation program for demand paging and show the page scheduling and total
+number of page faults according to the Optimal page replacement algorithm. Assume the
+memory of 'n' frames.
+Reference String: 8, 5, 7, 8, 5, 7, 2, 3, 7, 3, 5, 9, 4, 6, 2
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
+
+int main()
+{
+	pid_t pid;
+	int n;
+	printf("Parent Process ID: %d\n",getpid());
+	printf("Parent Nice Value: %d\n",nice(0));
+	pid=fork();
+	if(pid<0)
+	{
+		printf("Fork failed\n");
+		return 1;
+	}
+	if(pid==0)
+	{
+		printf("\nChild Process ID: %d\n",getpid());
+		printf("Child Nice Value Before: %d\n",nice(0));
+		n=nice(-5);
+		if(n==-1)
+		{
+			perror("nice");
+		}
+		else
+		{
+			printf("Child Nice Value After: %d\n",nice(0));
+			printf("Child has higher priority\n");
+		}
+	}
+	else
+	{
+		wait(NULL);
+		printf("\nParent process completed\n");
+	}
+	return 0;
+}
+
+
+
+
+Q2. Write the program to simulate Non-preemptive Shortest Job First (SJF) scheduling. The
+arrival time and first CPU burst for different n number of processes should be input to the
+algorithm. The next CPU burst should be generated randomly. The output should give Gantt
+chart, turnaround time and waiting time for each process. Also find the average waiting time
+and turnaround time.
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int ct;
+	int tat;
+	int wt;
+	int done;
+};
+int main()
+{
+	struct process p[20],temp;
+	int n,i,j,time=0,count=0;
+	float avgtat=0,avgwt=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		p[i].done=0;
+	}
+	for(i=0;i<n;i++)
+	{
+		for(j=i+1;j<n;j++)
+		{
+			if(p[i].at>p[j].at)
+			{
+				temp=p[i];
+				p[i]=p[j];
+				p[j]=temp;
+			}
+		}
+	}
+	printf("\nGantt Chart:\n");
+	while(count<n)
+	{
+		int pos=-1;
+		int min=9999;
+
+		for(i=0;i<n;i++)
+		{
+			if(p[i].done==0 && p[i].at<=time)
+			{
+				if(p[i].bt<min)
+				{
+					min=p[i].bt;
+					pos=i;
+				}
+			}
+		}
+		if(pos==-1)
+		{
+			time++;
+		}
+		else
+		{
+			printf("| P%d ",p[pos].pid);
+
+			time=time+p[pos].bt;
+			p[pos].ct=time;
+			p[pos].tat=p[pos].ct-p[pos].at;
+			p[pos].wt=p[pos].tat-p[pos].bt;
+			p[pos].done=1;
+			count++;
+
+			avgtat=avgtat+p[pos].tat;
+			avgwt=avgwt+p[pos].wt;
+
+			p[pos].bt=(rand()%10)+1;
+		}
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,p[i].at,p[i].bt,p[i].ct,p[i].tat,p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f\n",avgtat/n);
+	return 0;
+}
+
+
+____________________________________________________________________________________________
+SLIP 6
+
+Q1.  Write the program to simulate Round Robin (RR) scheduling. The arrival time and first
+CPU burst for different n number of processes should be input to the algorithm. Also give the
+time quantum as input. The next CPU burst should be generated randomly. The output should
+give Gantt chart, turnaround time and waiting time for each process. Also find the average
+waiting time and turnaround time.
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int rem;
+	int ct;
+	int tat;
+	int wt;
+	int done;
+};
+int main()
+{
+	struct process p[20];
+	int n,q,i,time=0,count=0;
+	int queue[100],front=0,rear=0;
+	int visited[20]={0};
+	int inqueue[20]={0};
+	float avgtat=0,avgwt=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	printf("Enter time quantum: ");
+	scanf("%d",&q);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		p[i].rem=p[i].bt;
+		p[i].done=0;
+	}
+	printf("\nGantt Chart:\n");
+	while(count<n)
+	{
+		for(i=0;i<n;i++)
+		{
+			if(p[i].at<=time && p[i].done==0 && inqueue[i]==0)
+			{
+				queue[rear++]=i;
+				inqueue[i]=1;
+			}
+		}
+		if(front==rear)
+		{
+			time++;
+			continue;
+		}
+		i=queue[front++];
+		printf("| P%d ",p[i].pid);
+		if(p[i].rem<=q)
+		{
+			time=time+p[i].rem;
+			p[i].rem=0;
+			p[i].ct=time;
+			p[i].tat=p[i].ct-p[i].at;
+			p[i].wt=p[i].tat-p[i].bt;
+			p[i].done=1;
+			count++;
+			avgtat=avgtat+p[i].tat;
+			avgwt=avgwt+p[i].wt;
+		}
+		else
+		{
+			time=time+q;
+			p[i].rem=p[i].rem-q;
+			for(int j=0;j<n;j++)
+			{
+				if(p[j].at<=time && p[j].done==0 && inqueue[j]==0)
+				{
+					queue[rear++]=j;
+					inqueue[j]=1;
+				}
+			}
+			queue[rear++]=i;
+		}
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,p[i].at,p[i].bt,p[i].ct,p[i].tat,p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f\n",avgtat/n);
+	return 0;
+}
+
+
+Q2.  Write a simulation program for disk scheduling using LOOK algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 55, 58, 39, 18, 90, 160, 150, 38
+Start Head Position: 100
+Direction: Left
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+	int blocks,n,head,i,j,temp;
+	int request[100];
+	int left[100],right[100];
+	int l=0,r=0;
+	int seek=0;
+	printf("Enter total number of disk blocks: ");
+	scanf("%d",&blocks);
+	printf("Enter number of disk requests: ");
+	scanf("%d",&n);
+	printf("Enter disk request string:\n");
+	for(i=0;i<n;i++)
+	{
+		scanf("%d",&request[i]);
+	}
+	printf("Enter starting head position: ");
+	scanf("%d",&head);
+	for(i=0;i<n;i++)
+	{
+		if(request[i]<head)
+			left[l++]=request[i];
+		else
+			right[r++]=request[i];
+	}
+	for(i=0;i<l-1;i++)
+	{
+		for(j=i+1;j<l;j++)
+		{
+			if(left[i]<left[j])
+			{
+				temp=left[i];
+				left[i]=left[j];
+				left[j]=temp;
+			}
+		}
+	}
+	for(i=0;i<r-1;i++)
+	{
+		for(j=i+1;j<r;j++)
+		{
+			if(right[i]>right[j])
+			{
+				temp=right[i];
+				right[i]=right[j];
+				right[j]=temp;
+			}
+		}
+	}
+	printf("Direction: Left\n");
+	printf("\nRequests served in order:\n");
+	printf("%d",head);
+	for(i=0;i<l;i++)
+	{
+		seek=seek+abs(head-left[i]);
+		head=left[i];
+		printf(" -> %d",head);
+	}
+	for(i=0;i<r;i++)
+	{
+		seek=seek+abs(head-right[i]);
+		head=right[i];
+		printf(" -> %d",head);
+	}
+	printf("\n\nTotal number of head movements = %d\n",seek);
+	return 0;
+}
+
+
+____________________________________________________________________
+SLIP 7
+
+Q1.  Write a C program to simulate Banker's algorithm for the purpose of deadlock avoidance. The
+following snapshot of system, A, B and C are the resource types.
+Implement the following Menu:
+a. Accept Available
+b. Display Allocation, Max
+c. Display the contents of need matrix
+d. Display Available
+
+
+#include <stdio.h>
+
+int n, m;
+int alloc[10][10];
+int max[10][10];
+int need[10][10];
+int available[10];
+int total[10];
+int work[10];
+int finish[10];
+int seq[10];
+int req[10];
+int pno;
+void accept()
+{
+    int i, j;
+    printf("\nEnter no of process: ");
+    scanf("%d", &n);
+    printf("Enter the no of resource type: ");
+    scanf("%d", &m);
+    printf("\nEnter total instances of each resource type\n");
+    for (j = 0; j < m; j++)
+    {
+        printf("%c: ", 65 + j);
+        scanf("%d", &total[j]);
+    }
+    printf("\nEnter the allocation\n");
+    for (i = 0; i < n; i++)
+    {
+        printf("p%d:\n", i);
+        for (j = 0; j < m; j++)
+        {
+            printf("%c: ", 65 + j);
+            scanf("%d", &alloc[i][j]);
+        }
+    }
+    printf("\nEnter max need\n");
+    for (i = 0; i < n; i++)
+    {
+        printf("p%d:\n", i);
+        for (j = 0; j < m; j++)
+        {
+            printf("%c: ", 65 + j);
+            scanf("%d", &max[i][j]);
+        }
+    }
+}
+void calc_avail()
+{
+    int i, j, s;
+    for (j = 0; j < m; j++)
+    {
+        s = 0;
+        for (i = 0; i < n; i++)
+            s = s + alloc[i][j];
+        available[j] = total[j] - s;
+    }
+}
+void calc_need()
+{
+    int i, j;
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < m; j++)
+        {
+            need[i][j] = max[i][j] - alloc[i][j];
+        }
+    }
+}
+void display_alloc_max()
+{
+    int i, j;
+    printf("\n\tAllocation\t\tMax\n\t");
+    for (i = 0; i < m; i++)
+        printf("%3c", 65 + i);
+    printf("\t\t");
+    for (i = 0; i < m; i++)
+        printf("%3c", 65 + i);
+    for (i = 0; i < n; i++)
+    {
+        printf("\np%d\t", i);
+        for (j = 0; j < m; j++)
+            printf("%3d", alloc[i][j]);
+        printf("\t\t");
+        for (j = 0; j < m; j++)
+            printf("%3d", max[i][j]);
+    }
+    printf("\n");
+}
+void display_need()
+{
+    int i, j;
+    printf("\n\tNeed\n\t");
+    for (i = 0; i < m; i++)
+        printf("%3c", 65 + i);
+    for (i = 0; i < n; i++)
+    {
+        printf("\np%d\t", i);
+        for (j = 0; j < m; j++)
+            printf("%3d", need[i][j]);
+    }
+    printf("\n");
+}
+void display_available()
+{
+    int j;
+    printf("\nAvailable\n");
+    for (j = 0; j < m; j++)
+        printf("%3c\t", 65 + j);
+    printf("\n");
+    for (j = 0; j < m; j++)
+        printf("%3d\t", available[j]);
+    printf("\n");
+}
+int find()
+{
+    int i, j;
+    for (i = 0; i < n; i++)
+    {
+        if (!finish[i])
+        {
+            for (j = 0; j < m; j++)
+            {
+                if (need[i][j] > work[j])
+                    break;
+            }
+            if (j == m)
+                return i;
+        }
+    }
+    return -1;
+}
+void bankers()
+{
+    int i, j, k = 0;
+    for (i = 0; i < n; i++)
+        finish[i] = 0;
+    for (j = 0; j < m; j++)
+        work[j] = available[j];
+    printf("\n\nBanker's Algorithm:")
+    while ((i = find()) != -1)
+    {
+        printf("\n\nNeed p%d = (", i);
+        for (j = 0; j < m; j++)
+            printf("%d ", need[i][j]);
+        printf(") <= Work = (");
+        for (j = 0; j < m; j++)
+            printf("%d ", work[j]);
+        printf(")");
+        finish[i] = 1;
+        for (j = 0; j < m; j++)
+            work[j] = work[j] + alloc[i][j];
+        printf("\nWork = (");
+        for (j = 0; j < m; j++)
+            printf("%d ", work[j]);
+        printf(")");
+        seq[k++] = i;
+    }
+    if (k == n)
+    {
+        printf("\n\nSystem is in safe state.");
+        printf("\nSafe sequence: ");
+        for (i = 0; i < n; i++)
+        {
+            printf("p%d", seq[i]);
+            if (i != n - 1)
+                printf(" -> ");
+        }
+        printf("\n");
+    }
+    else
+    {
+        printf("\n\nSystem is in unsafe state.\n");
+    }
+}
+void resource_request()
+{
+    int i, j;
+    printf("\nEnter process no: ");
+    scanf("%d", &pno);
+    if (pno < 0 || pno >= n)
+    {
+        printf("\nInvalid process number.");
+        return;
+    }
+    printf("Enter request of process p%d\n", pno);
+    for (j = 0; j < m; j++)
+    {
+        printf("%c: ", 65 + j);
+        scanf("%d", &req[j]);
+    }
+    for (j = 0; j < m; j++)
+    {
+        if (req[j] > need[pno][j])
+            break;
+    }
+    if (j != m)
+    {
+        printf("\nRequest of process p%d cannot be generated.", pno);
+        return;
+    }
+    for (j = 0; j < m; j++)
+    {
+        if (req[j] > available[j])
+            break;
+    }
+    if (j != m)
+    {
+        printf("\nProcess p%d has to wait.", pno);
+        return;
+    }
+    for (j = 0; j < m; j++)
+    {
+        available[j] = available[j] - req[j];
+        alloc[pno][j] = alloc[pno][j] + req[j];
+        need[pno][j] = need[pno][j] - req[j];
+    }
+    printf("\nRequest can be granted.");
+    printf("\n\nChecking system safety after allocation...\n");
+    bankers();
+}
+int main()
+{
+    char ch;
+    do
+    {
+        printf("\n\n========== BANKER'S ALGORITHM ==========\n");
+        printf("a. Accept Available\n");
+        printf("b. Display Allocation, Max\n");
+        printf("c. Display the contents of Need matrix\n");
+        printf("d. Display Available\n");
+        printf("e. Check Safe State\n");
+        printf("f. Resource Request\n");
+        printf("g. Exit\n");
+        printf("\nEnter your choice: ");
+        scanf(" %c", &ch);
+        switch (ch)
+        {
+            case 'a':
+            case 'A':
+                accept();
+                calc_avail();
+                calc_need();
+                printf("\nData accepted successfully.");
+                break;
+            case 'b':
+            case 'B':
+                display_alloc_max();
+                break;
+            case 'c':
+            case 'C':
+                display_need();
+                break;
+            case 'd':
+            case 'D':
+                display_available();
+                break;
+            case 'e':
+            case 'E':
+                bankers();
+                break;
+            case 'f':
+            case 'F':
+                resource_request();
+                break;
+            case 'g':
+            case 'G':
+                printf("\nExiting program...\n");
+                break;
+            default:
+                printf("\nInvalid choice!");
+        }
+    } while (ch != 'g' && ch != 'G');
+    return 0;
+}
+
+
+Q2.  Write the simulation program for demand paging and show the page scheduling and total
+number of page faults according to the Optimal page replacement algorithm. Assume the
+memory of n frames.
+Reference String: 8, 5, 7, 8, 5, 7, 2, 3, 7, 3, 5, 9, 4, 6, 2
+
+
+
+#include<stdio.h>
+
+int main()
+{
+	int n,k,i,j,p;
+	int ref[100],frame[20];
+	int faults=0,count=0;
+	int pos,max,posfound,found;
+	printf("Enter number of frames: ");
+	scanf("%d",&n);
+	printf("Enter number of pages in reference string: ");
+	scanf("%d",&k);
+	printf("Enter reference string:\n");
+	for(i=0;i<k;i++)
+		scanf("%d",&ref[i]);
+	for(i=0;i<n;i++)
+		frame[i]=-1;
+	printf("\nPage\t");
+	for(i=0;i<n;i++)
+		printf("F%d\t",i+1);
+	printf("Status\n");
+	for(i=0;i<k;i++)
+	{
+		found=0;
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==ref[i])
+			{
+				found=1;
+				break;
+			}
+		}
+		if(found==0)
+		{
+			faults++;
+			if(count<n)
+			{
+				frame[count]=ref[i];
+				count++;
+			}
+			else
+			{
+				max=-1;
+				posfound=-1;
+				for(j=0;j<n;j++)
+				{
+					pos=0;
+					for(p=i+1;p<k;p++)
+					{
+						if(frame[j]==ref[p])
+						{
+							pos=p;
+							break;
+						}
+					}
+					if(pos==0)
+					{
+						posfound=j;
+						break;
+					}
+					if(pos>max)
+					{
+						max=pos;
+						posfound=j;
+					}
+				}
+				frame[posfound]=ref[i];
+			}
+		}
+		printf("%d\t",ref[i]);
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==-1)
+				printf("-\t");
+			else
+				printf("%d\t",frame[j]);
+		}
+		if(found==0)
+			printf("Page Fault");
+		else
+			printf("Hit");
+		printf("\n");
+	}
+	printf("\nTotal number of page faults = %d\n",faults);
+	return 0;
+}
+
+
+________________________________________________________________
+SLIP 8
+
+Q1.  Write the program to simulate FCFS CPU scheduling. The arrival time and first CPU-burst
+for different n number of processes should be input to the algorithm. The next CPU-burst
+should be generated randomly. The output should give Gantt chart, turnaround time and
+waiting time for each process. Also find the average waiting time and turnaround time.
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int ct;
+	int tat;
+	int wt;
+};
+int main()
+{
+	struct process p[20],temp;
+	int n,i,j,time=0;
+	float avgtat=0,avgwt=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+	}
+	for(i=0;i<n-1;i++)
+	{
+		for(j=i+1;j<n;j++)
+		{
+			if(p[i].at>p[j].at)
+			{
+				temp=p[i];
+				p[i]=p[j];
+				p[j]=temp;
+			}
+		}
+	}
+	printf("\nGantt Chart:\n");
+	for(i=0;i<n;i++)
+	{
+		if(time<p[i].at)
+			time=p[i].at;
+		printf("| P%d ",p[i].pid);
+		time=time+p[i].bt;
+		p[i].ct=time;
+		p[i].tat=p[i].ct-p[i].at;
+		p[i].wt=p[i].tat-p[i].bt;
+		avgtat=avgtat+p[i].tat;
+		avgwt=avgwt+p[i].wt;
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,p[i].at,p[i].bt,p[i].ct,p[i].tat,p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f\n",avgtat/n);
+	printf("\nRandomly generated next CPU bursts:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d = %d\n",p[i].pid,(rand()%10)+1);
+	}
+	return 0;
+}
+
+
+
+Q2.  Implement the C program to accept n integers to be sorted. Main function creates child
+process using fork system call. Parent process sorts the integers using bubble sort and waits
+for child process using wait system call. Child process sorts the integers using insertion sort.
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
+
+void bubble_sort(int a[],int n)
+{
+	int i,j,temp;
+
+	for(i=0;i<n-1;i++)
+	{
+		for(j=0;j<n-i-1;j++)
+		{
+			if(a[j]>a[j+1])
+			{
+				temp=a[j];
+				a[j]=a[j+1];
+				a[j+1]=temp;
+			}
+		}
+	}
+}
+
+void insertion_sort(int a[],int n)
+{
+	int i,j,key;
+
+	for(i=1;i<n;i++)
+	{
+		key=a[i];
+		j=i-1;
+
+		while(j>=0 && a[j]>key)
+		{
+			a[j+1]=a[j];
+			j--;
+		}
+
+		a[j+1]=key;
+	}
+}
+
+void display(int a[],int n)
+{
+	int i;
+
+	for(i=0;i<n;i++)
+		printf("%d ",a[i]);
+
+	printf("\n");
+}
+
+int main()
+{
+	int n,i;
+	int a[100],b[100];
+	pid_t pid;
+
+	printf("Enter number of integers: ");
+	scanf("%d",&n);
+
+	printf("Enter %d integers:\n",n);
+
+	for(i=0;i<n;i++)
+	{
+		scanf("%d",&a[i]);
+		b[i]=a[i];
+	}
+
+	pid=fork();
+
+	if(pid<0)
+	{
+		printf("Fork failed\n");
+		return 1;
+	}
+
+	if(pid==0)
+	{
+		printf("\nChild Process\n");
+		printf("Child Process ID: %d\n",getpid());
+
+		insertion_sort(b,n);
+
+		printf("Sorted array using Insertion Sort:\n");
+		display(b,n);
+
+		exit(0);
+	}
+	else
+	{
+		printf("\nParent Process\n");
+		printf("Parent Process ID: %d\n",getpid());
+
+		bubble_sort(a,n);
+
+		printf("Sorted array using Bubble Sort:\n");
+		display(a,n);
+
+		wait(NULL);
+
+		printf("Parent process completed after waiting for child.\n");
+	}
+
+	return 0;
+}
+
+
+
+_______________________________________________________________________
+SLIP 9 
+
+
+Q1.     Write the program to simulate Non-preemptive Shortest Job First (SJF) scheduling. The
+arrival time and first CPU burst for different n number of processes should be input to the
+algorithm. The next CPU-burst should be generated randomly. The output should give Gantt
+chart, turnaround time and waiting time for each process. Also find the average waiting time
+and turnaround time.
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int ct;
+	int tat;
+	int wt;
+	int done;
+};
+int main()
+{
+	struct process p[20],temp;
+	int n,i,j,time=0,count=0,pos;
+	float avgwt=0,avgtat=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		p[i].done=0;
+	}
+	printf("\nGantt Chart:\n");
+	while(count<n)
+	{
+		pos=-1;
+		for(i=0;i<n;i++)
+		{
+			if(p[i].done==0 && p[i].at<=time)
+			{
+				if(pos==-1 || p[i].bt<p[pos].bt)
+					pos=i;
+			}
+		}
+		if(pos==-1)
+		{
+			time++;
+			continue;
+		}
+		printf("| P%d ",p[pos].pid);
+		if(time<p[pos].at)
+			time=p[pos].at;
+		time=time+p[pos].bt;
+		p[pos].ct=time;
+		p[pos].tat=p[pos].ct-p[pos].at;
+		p[pos].wt=p[pos].tat-p[pos].bt;
+		p[pos].done=1;
+		avgwt=avgwt+p[pos].wt;
+		avgtat=avgtat+p[pos].tat;
+		count++;
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,p[i].at,p[i].bt,p[i].ct,p[i].tat,p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f",avgtat/n);
+	printf("\n\nNext CPU Burst generated randomly:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d = %d\n",p[i].pid,(rand()%10)+1);
+	}
+	printf("\n");
+	return 0;
+}
+
+
+Q2.  Write a simulation program for disk scheduling using LOOK algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 15, 30, 55, 90, 125, 140, 170
+Starting Head Position: 100
+Direction: Left
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+	int blocks,n,head,i,j,temp;
+	int request[100],left[100],right[100];
+	int l=0,r=0;
+	int movement=0;
+	printf("Enter total number of disk blocks: ");
+	scanf("%d",&blocks);
+	printf("Enter number of disk requests: ");
+	scanf("%d",&n);
+	printf("Enter disk request string:\n");
+	for(i=0;i<n;i++)
+	{
+		scanf("%d",&request[i]);
+	}
+	printf("Enter starting head position: ");
+	scanf("%d",&head);
+	for(i=0;i<n;i++)
+	{
+		if(request[i]<head)
+			left[l++]=request[i];
+		else
+			right[r++]=request[i];
+	}
+	for(i=0;i<l-1;i++)
+	{
+		for(j=i+1;j<l;j++)
+		{
+			if(left[i]<left[j])
+			{
+				temp=left[i];
+				left[i]=left[j];
+				left[j]=temp;
+			}
+		}
+	}
+	for(i=0;i<r-1;i++)
+	{
+		for(j=i+1;j<r;j++)
+		{
+			if(right[i]>right[j])
+			{
+				temp=right[i];
+				right[i]=right[j];
+				right[j]=temp;
+			}
+		}
+	}
+	printf("\nDirection: Left");
+	printf("\n\nRequests served in order:\n");
+	printf("%d",head);
+	for(i=0;i<l;i++)
+	{
+		movement=movement+abs(head-left[i]);
+		head=left[i];
+		printf(" -> %d",head);
+	}
+	for(i=0;i<r;i++)
+	{
+		movement=movement+abs(head-right[i]);
+		head=right[i];
+		printf(" -> %d",head);
+	}
+	printf("\n\nTotal number of head movements = %d\n",movement);
+	return 0;
+}
+
+
+__________________________________________________________________________
+SLIP 10
+
+Q1.  Write a C program to illustrate the concept of orphan process. Parent process creates a child
+and terminates before child has finished its task. So child process becomes orphan process.
+(Use fork(), sleep(), getpid(), getppid())
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<stdlib.h>
+int main()
+{
+	pid_t pid;
+	pid=fork();
+	if(pid<0)
+	{
+		printf("Fork failed\n");
+		return 1;
+	}
+	if(pid==0)
+	{
+		printf("Child Process Started\n");
+		printf("Child PID: %d\n",getpid());
+		printf("Parent PID: %d\n",getppid());
+		sleep(5);
+		printf("\nAfter parent terminates:\n");
+		printf("Child PID: %d\n",getpid());
+		printf("New Parent PID: %d\n",getppid());
+		printf("Child process completed\n");
+	}
+	else
+	{
+		printf("Parent Process\n");
+		printf("Parent PID: %d\n",getpid());
+		printf("Child PID: %d\n",pid);
+		sleep(2);
+		printf("Parent process terminates\n");
+		exit(0);
+	}
+	return 0;
+}
+
+
+
+Q2. Write the program to simulate Preemptive Priority scheduling. The arrival time and first
+CPU-burst and priority for different n number of processes should be input to the algorithm.
+The next CPU-burst should be generated randomly. The output should give Gantt chart,
+turnaround time and waiting time for each process. Also find the average waiting time and
+turnaround time.
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int rem;
+	int priority;
+	int ct;
+	int tat;
+	int wt;
+	int done;
+};
+int main()
+{
+	struct process p[20];
+	int n,i,time=0,count=0;
+	int current,highest;
+	float avgwt=0,avgtat=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		printf("Enter priority for P%d: ",i+1);
+		scanf("%d",&p[i].priority);
+		p[i].rem=p[i].bt;
+		p[i].done=0;
+	}
+	printf("\nGantt Chart:\n");
+	while(count<n)
+	{
+		current=-1;
+		highest=9999;
+
+		for(i=0;i<n;i++)
+		{
+			if(p[i].at<=time && p[i].done==0 && p[i].rem>0)
+			{
+				if(p[i].priority<highest)
+				{
+					highest=p[i].priority;
+					current=i;
+				}
+			}
+		}
+		if(current==-1)
+		{
+			time++;
+			continue;
+		}
+		printf("| P%d ",p[current].pid);
+		p[current].rem--;
+		time++;
+		if(p[current].rem==0)
+		{
+			p[current].ct=time;
+			p[current].tat=p[current].ct-p[current].at;
+			p[current].wt=p[current].tat-p[current].bt;
+			p[current].done=1;
+			count++;
+			avgwt=avgwt+p[current].wt;
+			avgtat=avgtat+p[current].tat;
+		}
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tPriority\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,
+		p[i].at,
+		p[i].bt,
+		p[i].priority,
+		p[i].ct,
+		p[i].tat,
+		p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f",avgtat/n);
+	printf("\n\nNext CPU Burst generated randomly:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d = %d\n",p[i].pid,(rand()%10)+1);
+	}
+	printf("\n");
+	return 0;
+}
+
+
+
+_______________________________________________________________________________
+SLIP  11
+
+Q1. Write a simulation program for disk scheduling using LOOK algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 86, 147, 91, 177, 45, 12, 130
+Starting Head Position: 60
+Direction: Right
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+	int blocks,n,head,i,j,temp;
+	int request[100],left[100],right[100];
+	int l=0,r=0;
+	int movement=0;
+	printf("Enter total number of disk blocks: ");
+	scanf("%d",&blocks);
+	printf("Enter number of disk requests: ");
+	scanf("%d",&n);
+	printf("Enter disk request string:\n");
+	for(i=0;i<n;i++)
+	{
+		scanf("%d",&request[i]);
+	}
+	printf("Enter starting head position: ");
+	scanf("%d",&head);
+	for(i=0;i<n;i++)
+	{
+		if(request[i]<head)
+			left[l++]=request[i];
+		else
+			right[r++]=request[i];
+	}
+	for(i=0;i<l-1;i++)
+	{
+		for(j=i+1;j<l;j++)
+		{
+			if(left[i]>left[j])
+			{
+				temp=left[i];
+				left[i]=left[j];
+				left[j]=temp;
+			}
+		}
+	}
+	for(i=0;i<r-1;i++)
+	{
+		for(j=i+1;j<r;j++)
+		{
+			if(right[i]>right[j])
+			{
+				temp=right[i];
+				right[i]=right[j];
+				right[j]=temp;
+			}
+		}
+	}
+	printf("\nDirection: Right");
+	printf("\n\nRequests served in order:\n");
+	printf("%d",head);
+	for(i=0;i<r;i++)
+	{
+		movement=movement+abs(head-right[i]);
+		head=right[i];
+		printf(" -> %d",head);
+	}
+	for(i=l-1;i>=0;i--)
+	{
+		movement=movement+abs(head-left[i]);
+		head=left[i];
+		printf(" -> %d",head);
+	}
+	printf("\n\nTotal number of head movements = %d\n",movement);
+	return 0;
+}
+
+
+
+Q2.  Write the simulation program to implement demand paging and show the page scheduling
+and total number of page faults according to the LRU (using counter method) page
+replacement algorithm. Assume the memory of n frames.
+Reference String: 3, 5, 7, 2, 5, 1, 2, 3, 1, 3, 5, 3, 1, 6, 2
+
+
+#include<stdio.h>
+
+int main()
+{
+	int n,k,i,j,page;
+	int ref[100],frame[20],counter[20];
+	int time=0,fault=0,found,pos,min;
+	printf("Enter number of frames: ");
+	scanf("%d",&n);
+	printf("Enter number of pages in reference string: ");
+	scanf("%d",&k);
+	printf("Enter reference string:\n");
+	for(i=0;i<k;i++)
+		scanf("%d",&ref[i]);
+	for(i=0;i<n;i++)
+	{
+		frame[i]=-1;
+		counter[i]=0;
+	}
+	printf("\nPage\t");
+	for(i=0;i<n;i++)
+		printf("F%d\t",i+1);
+	printf("Status\n");
+	for(i=0;i<k;i++)
+	{
+		page=ref[i];
+		found=0;
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==page)
+			{
+				found=1;
+				time++;
+				counter[j]=time;
+				break;
+			}
+		}
+		if(found==0)
+		{
+			fault++;
+			time++;
+			pos=-1;
+			for(j=0;j<n;j++)
+			{
+				if(frame[j]==-1)
+				{
+					pos=j;
+					break;
+				}
+			}
+			if(pos==-1)
+			{
+				min=counter[0];
+				pos=0;
+				for(j=1;j<n;j++)
+				{
+					if(counter[j]<min)
+					{
+						min=counter[j];
+						pos=j;
+					}
+				}
+			}
+			frame[pos]=page;
+			counter[pos]=time;
+		}
+		printf("%d\t",page);
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==-1)
+				printf("-\t");
+			else
+				printf("%d\t",frame[j]);
+		}
+		if(found==0)
+			printf("Page Fault");
+		else
+			printf("Hit");
+		printf("\n");
+	}
+	printf("\nTotal number of page faults = %d\n",fault);
+	return 0;
+}
+
+
+
+_____________________________________________________________________
+SLIP  12
+
+
+Q1. Write the simulation program for demand paging and show the page scheduling and total
+number of page faults according to the MFU page replacement algorithm. Assume the
+memory of n frames.
+Reference String: 8, 5, 7, 8, 5, 7, 2, 3, 7, 3, 5, 9, 4, 6, 2
+
+
+#include<stdio.h>
+
+int main()
+{
+	int n,k,i,j,page;
+	int ref[100],frame[20],counter[20];
+	int time=0,fault=0,found,pos,min;
+	printf("Enter number of frames: ");
+	scanf("%d",&n);
+	printf("Enter number of pages in reference string: ");
+	scanf("%d",&k);
+	printf("Enter reference string:\n");
+	for(i=0;i<k;i++)
+		scanf("%d",&ref[i]);
+	for(i=0;i<n;i++)
+	{
+		frame[i]=-1;
+		counter[i]=0;
+	}
+	printf("\nPage\t");
+	for(i=0;i<n;i++)
+		printf("F%d\t",i+1);
+	printf("Status\n");
+	for(i=0;i<k;i++)
+	{
+		page=ref[i];
+		found=0;
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==page)
+			{
+				found=1;
+				time++;
+				counter[j]=time;
+				break;
+			}
+		}
+		if(found==0)
+		{
+			fault++;
+			time++;
+			pos=-1;
+			for(j=0;j<n;j++)
+			{
+				if(frame[j]==-1)
+				{
+					pos=j;
+					break;
+				}
+			}
+			if(pos==-1)
+			{
+				min=counter[0];
+				pos=0;
+				for(j=1;j<n;j++)
+				{
+					if(counter[j]<min)
+					{
+						min=counter[j];
+						pos=j;
+					}
+				}
+			}
+			frame[pos]=page;
+			counter[pos]=time;
+		}
+		printf("%d\t",page);
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==-1)
+				printf("-\t");
+			else
+				printf("%d\t",frame[j]);
+		}
+		if(found==0)
+			printf("Page Fault");
+		else
+			printf("Hit");
+		printf("\n");
+	}
+	printf("\nTotal number of page faults = %d\n",fault);
+	return 0;
+}
+
+
+
+Q2.  Write a program that demonstrates the use of nice() system call. After a child process is
+started using fork(), assign higher priority to the child using nice() system call.
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
+#include<errno.h>
+int main()
+{
+	pid_t pid;
+	int value;
+	printf("Parent Process ID: %d\n",getpid());
+	printf("Parent Nice Value: %d\n",nice(0));
+	pid=fork();
+	if(pid<0)
+	{
+		printf("Fork failed\n");
+		return 1;
+	}
+	if(pid==0)
+	{
+		printf("\nChild Process ID: %d\n",getpid());
+		printf("Child Nice Value Before: %d\n",nice(0));
+		errno=0;
+		value=nice(-5);
+		if(value==-1 && errno!=0)
+		{
+			perror("nice");
+			exit(1);
+		}
+		printf("Child Nice Value After: %d\n",nice(0));
+		printf("Child process has higher priority\n");
+	}
+	else
+	{
+		wait(NULL);
+		printf("\nParent process completed\n");
+	}
+	return 0;
+}
+
+
+
+_____________________________________________________________________________________
+SLIP 13
+
+Q1.  Implement the C program to accept n integers to be sorted. Main function creates child
+process using fork system call. Parent process sorts the integers using bubble sort and waits
+for child process using wait system call. Child process sorts the integers using insertion sort.
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
+
+void bubble_sort(int a[],int n)
+{
+	int i,j,temp;
+
+	for(i=0;i<n-1;i++)
+	{
+		for(j=0;j<n-i-1;j++)
+		{
+			if(a[j]>a[j+1])
+			{
+				temp=a[j];
+				a[j]=a[j+1];
+				a[j+1]=temp;
+			}
+		}
+	}
+}
+void insertion_sort(int a[],int n)
+{
+	int i,j,key;
+	for(i=1;i<n;i++)
+	{
+		key=a[i];
+		j=i-1;
+		while(j>=0 && a[j]>key)
+		{
+			a[j+1]=a[j];
+			j--;
+		}
+		a[j+1]=key;
+	}
+}
+void display(int a[],int n)
+{
+	int i;
+
+	for(i=0;i<n;i++)
+		printf("%d ",a[i]);
+
+	printf("\n");
+}
+int main()
+{
+	int n,i;
+	int a[100],b[100];
+	pid_t pid;
+	printf("Enter number of integers: ");
+	scanf("%d",&n);
+	printf("Enter %d integers:\n",n);
+	for(i=0;i<n;i++)
+	{
+		scanf("%d",&a[i]);
+		b[i]=a[i];
+	}
+	pid=fork();
+	if(pid<0)
+	{
+		printf("Fork failed\n");
+		return 1;
+	}
+	if(pid==0)
+	{
+		printf("\nChild Process\n");
+		printf("Child Process ID: %d\n",getpid());
+		insertion_sort(b,n);
+		printf("Sorted array using Insertion Sort:\n");
+		display(b,n);
+		exit(0);
+	}
+	else
+	{
+		printf("\nParent Process\n");
+		printf("Parent Process ID: %d\n",getpid());
+		bubble_sort(a,n);
+		printf("Sorted array using Bubble Sort:\n");
+		display(a,n);
+		wait(NULL);
+		printf("Parent process completed after waiting for child.\n");
+	}
+	return 0;
+}
+
+
+
+
+Q2. Write the program to simulate Non-preemptive Shortest Job First (SJF) scheduling. The
+arrival time and first CPU-burst for different n number of processes should be input to the
+algorithm. The next CPU-burst should be generated randomly. The output should give Gantt
+chart, turnaround time and waiting time for each process. Also find the average waiting time
+and turnaround time.
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int ct;
+	int tat;
+	int wt;
+	int done;
+};
+int main()
+{
+	struct process p[20];
+	int n,i,time=0,count=0,pos;
+	float avgwt=0,avgtat=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		p[i].done=0;
+	}
+	printf("\nGantt Chart:\n");
+	while(count<n)
+	{
+		pos=-1;
+		for(i=0;i<n;i++)
+		{
+			if(p[i].done==0 && p[i].at<=time)
+			{
+				if(pos==-1 || p[i].bt<p[pos].bt)
+					pos=i;
+			}
+		}
+		if(pos==-1)
+		{
+			time++;
+			continue;
+		}
+		printf("| P%d ",p[pos].pid);
+		time=time+p[pos].bt;
+		p[pos].ct=time;
+		p[pos].tat=p[pos].ct-p[pos].at;
+		p[pos].wt=p[pos].tat-p[pos].bt;
+		p[pos].done=1;
+		avgwt=avgwt+p[pos].wt;
+		avgtat=avgtat+p[pos].tat;
+		count++;
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,p[i].at,p[i].bt,p[i].ct,p[i].tat,p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f",avgtat/n);
+	printf("\n\nNext CPU Burst generated randomly:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d = %d\n",p[i].pid,(rand()%10)+1);
+	}
+	printf("\n");
+	return 0;
+}
+
+
+_________________________________________________________________________
+SLIP 14
+
+
+Q1.  Write a simulation program for disk scheduling using SSTF algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 30, 10, 60, 95, 120, 150, 175
+Start Head Position: 50
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+	int blocks,n,head,i,j,min,position,temp;
+	int request[100],visited[100];
+	int movement=0;
+	printf("Enter total number of disk blocks: ");
+	scanf("%d",&blocks);
+	printf("Enter number of disk requests: ");
+	scanf("%d",&n);
+	printf("Enter disk request string:\n");
+	for(i=0;i<n;i++)
+	{
+		scanf("%d",&request[i]);
+		visited[i]=0;
+	}
+	printf("Enter starting head position: ");
+	scanf("%d",&head);
+	printf("\nRequests served in order:\n");
+	printf("%d",head);
+	for(i=0;i<n;i++)
+	{
+		min=9999;
+		position=-1;
+		for(j=0;j<n;j++)
+		{
+			if(visited[j]==0)
+			{
+				temp=abs(head-request[j]);
+				if(temp<min)
+				{
+					min=temp;
+					position=j;
+				}
+			}
+		}
+		visited[position]=1;
+		movement=movement+abs(head-request[position]);
+		head=request[position];
+		printf(" -> %d",head);
+	}
+	printf("\n\nTotal number of head movements = %d\n",movement);
+	return 0;
+}
+
+
+Q2.  Write the simulation program to implement demand paging and show the page scheduling
+and total number of page faults according to the LRU (using counter method) page
+replacement algorithm. Assume the memory of n frames.
+Reference String: 3, 5, 7, 2, 5, 1, 2, 3, 1, 3, 5, 3, 1, 6, 2
+
+
+
+#include<stdio.h>
+
+int main()
+{
+	int n,k,i,j;
+	int ref[100],frame[20],counter[20];
+	int page,fault=0,time=0;
+	int found,pos,min;
+	printf("Enter number of frames: ");
+	scanf("%d",&n);
+	printf("Enter number of pages in reference string: ");
+	scanf("%d",&k);
+	printf("Enter reference string:\n");
+	for(i=0;i<k;i++)
+		scanf("%d",&ref[i]);
+	for(i=0;i<n;i++)
+	{
+		frame[i]=-1;
+		counter[i]=0;
+	}
+	printf("\nPage\t");
+	for(i=0;i<n;i++)
+		printf("F%d\t",i+1);
+	printf("Status\n");
+	for(i=0;i<k;i++)
+	{
+		page=ref[i];
+		found=0;
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==page)
+			{
+				found=1;
+				time++;
+				counter[j]=time;
+				break;
+			}
+		}
+		if(found==0)
+		{
+			fault++;
+			time++;
+			pos=-1;
+			for(j=0;j<n;j++)
+			{
+				if(frame[j]==-1)
+				{
+					pos=j;
+					break;
+				}
+			}
+			if(pos==-1)
+			{
+				min=counter[0];
+				pos=0;
+				for(j=1;j<n;j++)
+				{
+					if(counter[j]<min)
+					{
+						min=counter[j];
+						pos=j;
+					}
+				}
+			}
+			frame[pos]=page;
+			counter[pos]=time;
+		}
+		printf("%d\t",page);
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==-1)
+				printf("-\t");
+			else
+				printf("%d\t",frame[j]);
+		}
+		if(found==0)
+			printf("Page Fault");
+		else
+			printf("Hit");
+		printf("\n");
+	}
+	printf("\nTotal number of page faults = %d\n",fault);
+	return 0;
+}
+
+
+
+
+__________________________________________________________________________
+SLIP 15
+
+Q1.  Write a simulation program for disk scheduling using SCAN algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 10, 25, 75, 90, 130, 145, 180, 55
+Starting Head Position = 80
+Direction: Left
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+	int blocks,n,head,i,j,temp;
+	int request[100],left[100],right[100];
+	int l=0,r=0;
+	int movement=0;
+	printf("Enter total number of disk blocks: ");
+	scanf("%d",&blocks);
+	printf("Enter number of disk requests: ");
+	scanf("%d",&n);
+	printf("Enter disk request string:\n");
+	for(i=0;i<n;i++)
+		scanf("%d",&request[i]);
+	printf("Enter starting head position: ");
+	scanf("%d",&head);
+	for(i=0;i<n;i++)
+	{
+		if(request[i]<head)
+			left[l++]=request[i];
+		else
+			right[r++]=request[i];
+	}
+	for(i=0;i<l-1;i++)
+	{
+		for(j=i+1;j<l;j++)
+		{
+			if(left[i]<left[j])
+			{
+				temp=left[i];
+				left[i]=left[j];
+				left[j]=temp;
+			}
+		}
+	}
+	for(i=0;i<r-1;i++)
+	{
+		for(j=i+1;j<r;j++)
+		{
+			if(right[i]>right[j])
+			{
+				temp=right[i];
+				right[i]=right[j];
+				right[j]=temp;
+			}
+		}
+	}
+	printf("\nDirection: Left");
+	printf("\n\nRequests served in order:\n");
+	printf("%d",head);
+	for(i=0;i<l;i++)
+	{
+		movement=movement+abs(head-left[i]);
+		head=left[i];
+		printf(" -> %d",head);
+	}
+	movement=movement+abs(head-0);
+	head=0;
+	printf(" -> %d",head);
+	for(i=0;i<r;i++)
+	{
+		movement=movement+abs(head-right[i]);
+		head=right[i];
+		printf(" -> %d",head);
+	}
+	printf("\n\nTotal number of head movements = %d\n",movement);
+	return 0;
+}
+
+
+
+
+Q2.  Write the simulation program for demand paging and show the page scheduling and total
+number of page faults according to the MFU page replacement algorithm. Assume the
+memory of n frames.
+Reference String: 8, 5, 7, 8, 5, 7, 2, 3, 7, 3, 5, 9, 4, 6, 2
+
+
+
+#include<stdio.h>
+
+int main()
+{
+	int n,k,i,j;
+	int ref[100],frame[20],count[20];
+	int page,fault=0;
+	int found,pos,max;
+	printf("Enter number of frames: ");
+	scanf("%d",&n);
+	printf("Enter number of pages in reference string: ");
+	scanf("%d",&k);
+	printf("Enter reference string:\n");
+	for(i=0;i<k;i++)
+		scanf("%d",&ref[i]);
+	for(i=0;i<n;i++)
+	{
+		frame[i]=-1;
+		count[i]=0;
+	}
+	printf("\nPage\t");
+	for(i=0;i<n;i++)
+		printf("F%d\t",i+1);
+	printf("Status\n");
+	for(i=0;i<k;i++)
+	{
+		page=ref[i];
+		found=0;
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==page)
+			{
+				found=1;
+				count[j]++;
+				break;
+			}
+		}
+		if(found==0)
+		{
+			fault++;
+			pos=-1;
+			for(j=0;j<n;j++)
+			{
+				if(frame[j]==-1)
+				{
+					pos=j;
+					break;
+				}
+			}
+			if(pos==-1)
+			{
+				max=count[0];
+				pos=0;
+				for(j=1;j<n;j++)
+				{
+					if(count[j]>max)
+					{
+						max=count[j];
+						pos=j;
+					}
+				}
+			}
+			frame[pos]=page;
+			count[pos]=1;
+		}
+		printf("%d\t",page);
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==-1)
+				printf("-\t");
+			else
+				printf("%d\t",frame[j]);
+		}
+		if(found==0)
+			printf("Page Fault");
+		else
+			printf("Hit");
+		printf("\n");
+	}
+	printf("\nTotal number of page faults = %d\n",fault);
+	return 0;
+}
+
+
+______________________________________________________________________________________
+SLIP 16
+
+
+Q1. Write a program to simulate Linked file allocation method. Assume disk with 'n' number of
+blocks. Give value of 'n' as input. Randomly mark some block as allocated and accordingly
+maintain the list of free blocks. Write menu driven program with menu options as mentioned
+below and implement each option.
+Show Bit Vector
+Create New File
+Show Directory
+Exit
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+int n;
+int bit[100];
+int next[100];
+char filename[20][20];
+int start[20];
+int count[20];
+int files=0;
+
+void show_bit_vector()
+{
+	int i;
+	printf("\nBit Vector:\n");
+	for(i=0;i<n;i++)
+		printf("%d ",bit[i]);
+	printf("\n");
+}
+void create_file()
+{
+	int i,j,blocks;
+	int freecount=0;
+	int first=-1,last=-1;
+	int p;
+	printf("\nEnter file name: ");
+	scanf("%s",filename[files]);
+	printf("Enter number of blocks required: ");
+	scanf("%d",&blocks);
+	for(i=0;i<n;i++)
+	{
+		if(bit[i]==0)
+			freecount++;
+	}
+	if(blocks>freecount)
+	{
+		printf("Not enough free blocks available\n");
+		return;
+	}
+
+	for(i=0;i<blocks;i++)
+	{
+		do
+		{
+			p=rand()%n;
+		}
+		while(bit[p]!=0);
+		bit[p]=1;
+		next[p]=-1;
+		if(first==-1)
+			first=p;
+		else
+			next[last]=p;
+		last=p;
+	}
+	start[files]=first;
+	count[files]=blocks;
+	files++;
+	printf("File created successfully\n");
+	printf("Allocated blocks: ");
+	p=first;
+	while(p!=-1)
+	{
+		printf("%d ",p);
+		p=next[p];
+	}
+	printf("\n");
+}
+void show_directory()
+{
+	int i,p;
+	printf("\nDirectory:\n");
+	printf("File Name\tStart Block\tBlocks\n");
+	for(i=0;i<files;i++)
+	{
+		printf("%s\t\t%d\t\t",filename[i],start[i]);
+		p=start[i];
+		while(p!=-1)
+		{
+			printf("%d ",p);
+			p=next[p];
+		}
+		printf("\n");
+	}
+}
+int main()
+{
+	int i,choice;
+	srand(time(0));
+	printf("Enter number of disk blocks: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		bit[i]=0;
+		next[i]=-1;
+	}
+	for(i=0;i<n/4;i++)
+	{
+		int p;
+		do
+		{
+			p=rand()%n;
+		}
+		while(bit[p]!=0);
+		bit[p]=1;
+	}
+	while(1)
+	{
+		printf("\n\nMenu");
+		printf("\n1. Show Bit Vector");
+		printf("\n2. Create New File");
+		printf("\n3. Show Directory");
+		printf("\n4. Exit");
+		printf("\nEnter your choice: ");
+		scanf("%d",&choice);
+		switch(choice)
+		{
+			case 1:
+				show_bit_vector();
+				break;
+			case 2:
+				create_file();
+				break;
+			case 3:
+				show_directory();
+				break;
+			case 4:
+				exit(0);
+			default:
+				printf("Invalid choice\n");
+		}
+	}
+	return 0;
+}
+
+
+
+Q2.  Write a simulation program for disk scheduling using FCFS algorithm. Accept total number
+of disk blocks, disk request string, and current head position from the user. Display the list of
+requests in the order in which it is served. Also display the total number of head movements.
+Request string: 55, 58, 39, 18, 90, 160, 150, 38, 184
+Start Head Position: 50
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+	int blocks,n,head,i;
+	int request[100];
+	int movement=0;
+	printf("Enter total number of disk blocks: ");
+	scanf("%d",&blocks);
+	printf("Enter number of disk requests: ");
+	scanf("%d",&n);
+	printf("Enter disk request string:\n");
+	for(i=0;i<n;i++)
+	{
+		scanf("%d",&request[i]);
+	}
+	printf("Enter starting head position: ");
+	scanf("%d",&head);
+	printf("\nRequests served in order:\n");
+	printf("%d",head);
+	for(i=0;i<n;i++)
+	{
+		movement=movement+abs(head-request[i]);
+		head=request[i];
+		printf(" -> %d",head);
+	}
+	printf("\n\nTotal number of head movements = %d\n",movement);
+	return 0;
+}
+
+
+
+____________________________________________________________________________
+SLIP 17
+
+Q1.  Write a program to simulate Sequential file allocation method. Assume disk with n number
+of blocks. Give value of n as input. Randomly mark some block as allocated and accordingly
+maintain the list of free blocks. Write menu driven program with menu options as mentioned
+below and implement each option.
+Show Bit Vector
+Create New File
+Show Directory
+Exit
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+int n;
+int bit[100];
+char filename[20][20];
+int start[20];
+int length[20];
+int files=0;
+void show_bit_vector()
+{
+	int i;
+	printf("\nBit Vector:\n");
+	for(i=0;i<n;i++)
+		printf("%d ",bit[i]);
+	printf("\n");
+}
+void create_file()
+{
+	int i,j,blocks;
+	int found,start_block=-1;
+	printf("\nEnter file name: ");
+	scanf("%s",filename[files]);
+	printf("Enter number of blocks required: ");
+	scanf("%d",&blocks);
+	for(i=0;i<=n-blocks;i++)
+	{
+		found=1;
+		for(j=0;j<blocks;j++)
+		{
+			if(bit[i+j]!=0)
+			{
+				found=0;
+				break;
+			}
+		}
+		if(found==1)
+		{
+			start_block=i;
+			break;
+		}
+	}
+	if(start_block==-1)
+	{
+		printf("Required contiguous blocks are not available\n");
+		return;
+	}
+	for(i=0;i<blocks;i++)
+		bit[start_block+i]=1;
+	start[files]=start_block;
+	length[files]=blocks;
+	files++;
+	printf("File created successfully\n");
+	printf("Allocated blocks: ");
+	for(i=0;i<blocks;i++)
+		printf("%d ",start_block+i);
+	printf("\n");
+}
+void show_directory()
+{
+	int i,j;
+	printf("\nDirectory:\n");
+	printf("File Name\tStart Block\tBlocks\n");
+	for(i=0;i<files;i++)
+	{
+		printf("%s\t\t%d\t\t",filename[i],start[i]);
+		for(j=0;j<length[i];j++)
+			printf("%d ",start[i]+j);
+		printf("\n");
+	}
+}
+int main()
+{
+	int i,p,choice;
+	srand(time(0));
+	printf("Enter number of disk blocks: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+		bit[i]=0;
+	for(i=0;i<n/4;i++)
+	{
+		do
+		{
+			p=rand()%n;
+		}
+		while(bit[p]!=0);
+		bit[p]=1;
+	}
+	while(1)
+	{
+		printf("\n\nMenu");
+		printf("\n1. Show Bit Vector");
+		printf("\n2. Create New File");
+		printf("\n3. Show Directory");
+		printf("\n4. Exit");
+		printf("\nEnter your choice: ");
+		scanf("%d",&choice);
+		switch(choice)
+		{
+			case 1:
+				show_bit_vector();
+				break;
+			case 2:
+				create_file();
+				break;
+			case 3:
+				show_directory();
+				break;
+			case 4:
+				exit(0);
+			default:
+				printf("Invalid choice\n");
+		}
+	}
+	return 0;
+}
+
+
+
+Q2.  Write a simulation program for disk scheduling using C-SCAN algorithm. Accept total
+number of disk blocks, disk request string, and current head position from the user. Display
+the list of requests in the order in which it is served. Also display the total number of head
+movements. (Assume disk size = 200)
+Request string: 15, 45, 75, 105, 135, 165, 195, 80
+Starting Head Position: 100
+Direction: Right
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int main()
+{
+	int blocks,n,head,i,j,temp;
+	int request[100],left[100],right[100];
+	int l=0,r=0;
+	int movement=0;
+	printf("Enter total number of disk blocks: ");
+	scanf("%d",&blocks);
+	printf("Enter number of disk requests: ");
+	scanf("%d",&n);
+	printf("Enter disk request string:\n");
+	for(i=0;i<n;i++)
+		scanf("%d",&request[i]);
+	printf("Enter starting head position: ");
+	scanf("%d",&head);
+	for(i=0;i<n;i++)
+	{
+		if(request[i]<head)
+			left[l++]=request[i];
+		else
+			right[r++]=request[i];
+	}
+	for(i=0;i<r-1;i++)
+	{
+		for(j=i+1;j<r;j++)
+		{
+			if(right[i]>right[j])
+			{
+				temp=right[i];
+				right[i]=right[j];
+				right[j]=temp;
+			}
+		}
+	}
+	for(i=0;i<l-1;i++)
+	{
+		for(j=i+1;j<l;j++)
+		{
+			if(left[i]>left[j])
+			{
+				temp=left[i];
+				left[i]=left[j];
+				left[j]=temp;
+			}
+		}
+	}
+	printf("\nDirection: Right");
+	printf("\n\nRequests served in order:\n");
+	printf("%d",head);
+	for(i=0;i<r;i++)
+	{
+		movement=movement+abs(head-right[i]);
+		head=right[i];
+		printf(" -> %d",head);
+	}
+	movement=movement+abs(head-(blocks-1));
+	head=blocks-1;
+	printf(" -> %d",head);
+	movement=movement+abs(head-0);
+	head=0;
+	printf(" -> %d",head);
+	for(i=0;i<l;i++)
+	{
+		movement=movement+abs(head-left[i]);
+		head=left[i];
+		printf(" -> %d",head);
+	}
+	printf("\n\nTotal number of head movements = %d\n",movement);
+	return 0;
+}
+
+
+
+_________________________________________________________________________________
+SLIP 18
+
+Q1.  Write the program to simulate Preemptive Shortest Job First (SJF) scheduling. The arrival
+time and first CPU burst for different n number of processes should be input to the algorithm.
+The next CPU burst should be generated randomly. The output should give Gantt chart,
+turnaround time and waiting time for each process. Also find the average waiting time and
+turnaround time
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int rt;
+	int ct;
+	int tat;
+	int wt;
+};
+int main()
+{
+	struct process p[20];
+	int n,i,time=0,completed=0,pos;
+	int last=-1;
+	float avgwt=0,avgtat=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		p[i].rt=p[i].bt;
+		p[i].ct=0;
+	}
+	printf("\nGantt Chart:\n");
+	while(completed<n)
+	{
+		pos=-1;
+		for(i=0;i<n;i++)
+		{
+			if(p[i].at<=time && p[i].rt>0)
+			{
+				if(pos==-1 || p[i].rt<p[pos].rt)
+					pos=i;
+			}
+		}
+		if(pos==-1)
+		{
+			time++;
+			continue;
+		}
+		if(last!=p[pos].pid)
+		{
+			if(last!=-1)
+				printf(" ");
+			printf("| P%d ",p[pos].pid);
+			last=p[pos].pid;
+		}
+		p[pos].rt--;
+		time++;
+		if(p[pos].rt==0)
+		{
+			p[pos].ct=time;
+			p[pos].tat=p[pos].ct-p[pos].at;
+			p[pos].wt=p[pos].tat-p[pos].bt;
+			avgwt=avgwt+p[pos].wt;
+			avgtat=avgtat+p[pos].tat;
+			completed++;
+		}
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,p[i].at,p[i].bt,p[i].ct,p[i].tat,p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f",avgtat/n);
+	printf("\n\nNext CPU Burst generated randomly:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d = %d\n",p[i].pid,(rand()%10)+1);
+	}
+	printf("\n");
+	return 0;
+}
+
+
+Q2.   Write a C program to illustrate the concept of orphan process. Parent process creates a child
+and terminates before child has finished its task. So child process becomes orphan process.
+(Use fork(), sleep(), getpid(), getppid())
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<stdlib.h>
+
+int main()
+{
+	pid_t pid;
+	pid=fork();
+	if(pid<0)
+	{
+		printf("Fork failed\n");
+		return 1;
+	}
+	if(pid==0)
+	{
+		printf("\nChild Process Started\n");
+		printf("Child Process ID: %d\n",getpid());
+		printf("Parent Process ID: %d\n",getppid());
+		sleep(5);
+		printf("\nAfter parent terminates:\n");
+		printf("Child Process ID: %d\n",getpid());
+		printf("New Parent Process ID: %d\n",getppid());
+		printf("Child process completed\n");
+	}
+	else
+	{
+		printf("\nParent Process\n");
+		printf("Parent Process ID: %d\n",getpid());
+		printf("Child Process ID: %d\n",pid);
+		sleep(2);
+		printf("Parent process terminated\n");
+		exit(0);
+	}
+	return 0;
+}
+
+
+
+_______________________________________________________________________________________
+SLIP 19
+
+
+Q1.  Write the program to simulate Preemptive Priority scheduling. The arrival time and first
+CPU-burst and priority for different n number of processes should be input to the algorithm.
+The next CPU-burst should be generated randomly.
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int rt;
+	int priority;
+	int ct;
+	int tat;
+	int wt;
+};
+int main()
+{
+	struct process p[20];
+	int n,i,time=0,completed=0,pos,last=-1;
+	float avgwt=0,avgtat=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		printf("Enter priority for P%d: ",i+1);
+		scanf("%d",&p[i].priority);
+		p[i].rt=p[i].bt;
+		p[i].ct=0;
+	}
+	printf("\nGantt Chart:\n");
+	while(completed<n)
+	{
+		pos=-1;
+		for(i=0;i<n;i++)
+		{
+			if(p[i].at<=time && p[i].rt>0)
+			{
+				if(pos==-1 ||
+				   p[i].priority<p[pos].priority ||
+				   (p[i].priority==p[pos].priority &&
+				    p[i].rt<p[pos].rt))
+				{
+					pos=i;
+				}
+			}
+		}
+		if(pos==-1)
+		{
+			time++;
+			continue;
+		}
+		if(last!=p[pos].pid)
+		{
+			printf("| P%d ",p[pos].pid);
+			last=p[pos].pid;
+		}
+		p[pos].rt--;
+		time++;
+		if(p[pos].rt==0)
+		{
+			p[pos].ct=time;
+			p[pos].tat=p[pos].ct-p[pos].at;
+			p[pos].wt=p[pos].tat-p[pos].bt;
+			avgwt=avgwt+p[pos].wt;
+			avgtat=avgtat+p[pos].tat;
+			completed++;
+		}
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tPriority\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,
+		p[i].at,
+		p[i].bt,
+		p[i].priority,
+		p[i].ct,
+		p[i].tat,
+		p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f",avgtat/n);
+	printf("\n\nNext CPU Burst generated randomly:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d = %d\n",p[i].pid,(rand()%10)+1);
+	}
+	printf("\n");
+	return 0;
+}
+
+
+
+Q2.  Write a program that demonstrates the use of nice() system call. After a child process is
+started using fork(), assign higher priority to the child using nice() system call.
+
+
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+
+int main()
+{
+	pid_t pid;
+	int n;
+	printf("Parent Process ID: %d\n",getpid());
+	printf("Parent Nice Value: %d\n",nice(0));
+	pid=fork();
+	if(pid<0)
+	{
+		printf("Fork failed\n");
+		return 1;
+	}
+	if(pid==0)
+	{
+		printf("\nChild Process\n");
+		printf("Child Process ID: %d\n",getpid());
+		printf("Nice Value Before: %d\n",nice(0));
+		n=nice(-5);
+		if(n==-1)
+		{
+			perror("nice");
+			return 1;
+		}
+		printf("Nice Value After: %d\n",nice(0));
+		printf("Child process has higher priority\n");
+	}
+	else
+	{
+		wait(NULL);
+		printf("\nParent process completed\n");
+	}
+	return 0;
+}
+
+_______________________________________________________________________________________
+SLIP 20
+
+Q1.  Write the program to simulate Preemptive Priority scheduling. The arrival time and first
+CPU-burst and priority for different n number of processes should be input to the algorithm.
+The next CPU-burst should be generated randomly.
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+struct process
+{
+	int pid;
+	int at;
+	int bt;
+	int rt;
+	int priority;
+	int ct;
+	int tat;
+	int wt;
+};
+int main()
+{
+	struct process p[20];
+	int n,i,time=0,completed=0,pos,last=-1;
+	float avgwt=0,avgtat=0;
+	srand(time(0));
+	printf("Enter number of processes: ");
+	scanf("%d",&n);
+	for(i=0;i<n;i++)
+	{
+		p[i].pid=i+1;
+		printf("\nEnter arrival time for P%d: ",i+1);
+		scanf("%d",&p[i].at);
+		printf("Enter first CPU burst for P%d: ",i+1);
+		scanf("%d",&p[i].bt);
+		printf("Enter priority for P%d: ",i+1);
+		scanf("%d",&p[i].priority);
+		p[i].rt=p[i].bt;
+		p[i].ct=0;
+		p[i].tat=0;
+		p[i].wt=0;
+	}
+	printf("\nGantt Chart:\n");
+	while(completed<n)
+	{
+		pos=-1;
+		for(i=0;i<n;i++)
+		{
+			if(p[i].at<=time && p[i].rt>0)
+			{
+				if(pos==-1 || p[i].priority<p[pos].priority)
+					pos=i;
+			}
+		}
+		if(pos==-1)
+		{
+			time++;
+			continue;
+		}
+		if(last!=p[pos].pid)
+		{
+			printf("| P%d ",p[pos].pid);
+			last=p[pos].pid;
+		}
+		p[pos].rt--;
+		time++;
+		if(p[pos].rt==0)
+		{
+			p[pos].ct=time;
+			p[pos].tat=p[pos].ct-p[pos].at;
+			p[pos].wt=p[pos].tat-p[pos].bt;
+			avgwt=avgwt+p[pos].wt;
+			avgtat=avgtat+p[pos].tat;
+			completed++;
+		}
+	}
+	printf("|\n");
+	printf("\nProcess\tArrival\tCPU Burst\tPriority\tCompletion\tTurnaround\tWaiting\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d\t%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n",
+		p[i].pid,
+		p[i].at,
+		p[i].bt,
+		p[i].priority,
+		p[i].ct,
+		p[i].tat,
+		p[i].wt);
+	}
+	printf("\nAverage Waiting Time = %.2f",avgwt/n);
+	printf("\nAverage Turnaround Time = %.2f",avgtat/n);
+	printf("\n\nNext CPU Burst generated randomly:\n");
+	for(i=0;i<n;i++)
+	{
+		printf("P%d = %d\n",p[i].pid,(rand()%10)+1);
+	}
+	printf("\n");
+	return 0;
+}
+
+
+
+
+Q2.  Write the simulation program for demand paging and show the page scheduling and total
+number of page faults according to the FIFO page replacement algorithm. Assume the
+memory of n frames.
+Reference String: 3, 4, 5, 6, 3, 4, 7, 3, 4, 5, 6, 7, 2, 4, 6
+
+
+#include<stdio.h>
+
+int main()
+{
+	int n,k,i,j;
+	int ref[100],frame[20];
+	int page,fault=0,found;
+	int pos=0;
+	printf("Enter number of frames: ");
+	scanf("%d",&n);
+	printf("Enter number of pages in reference string: ");
+	scanf("%d",&k);
+	printf("Enter reference string:\n");
+	for(i=0;i<k;i++)
+		scanf("%d",&ref[i]);
+	for(i=0;i<n;i++)
+		frame[i]=-1;
+	printf("\nPage\t");
+	for(i=0;i<n;i++)
+		printf("F%d\t",i+1);
+	printf("Status\n");
+	for(i=0;i<k;i++)
+	{
+		page=ref[i];
+		found=0;
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==page)
+			{
+				found=1;
+				break;
+			}
+		}
+		if(found==0)
+		{
+			frame[pos]=page;
+			pos=(pos+1)%n;
+			fault++;
+		}
+		printf("%d\t",page);
+		for(j=0;j<n;j++)
+		{
+			if(frame[j]==-1)
+				printf("-\t");
+			else
+				printf("%d\t",frame[j]);
+		}
+		if(found==0)
+			printf("Page Fault");
+		else
+			printf("Hit");
+		printf("\n");
+	}
+	printf("\nTotal number of page faults = %d\n",fault);
+	return 0;
+}
+
